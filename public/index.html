@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>รายงานผู้ป่วย ที่มารับบริการ ณ PCC</title>
+  <title>รายงานผู้ป่วย PCC - แผนกตา</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -21,10 +21,6 @@
       padding: 15px;
       margin-bottom: 15px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .patient-card strong {
-      color: #2c3e50;
     }
 
     .patient-field {
@@ -66,7 +62,7 @@
 </head>
 <body>
 
-  <h1>รายงานผู้ป่วย ที่มารับบริการ ณ PCC<span id="total">(กำลังโหลด...)</span></h1>
+  <h1>รายงานผู้ป่วย ที่มารับบริการ ณ PCC <span id="total">(กำลังโหลด...)</span></h1>
   <div id="patient-list">กำลังโหลดข้อมูล...</div>
   <div id="lastUpdated"></div>
 
@@ -91,36 +87,45 @@
         const total = document.getElementById('total');
         const lastUpdated = document.getElementById('lastUpdated');
 
-        total.innerText = `(${data.total} คน)`;
+        // ✅ ตรวจสอบ data ก่อนใช้งาน
+        if (!data || typeof data !== 'object') {
+          throw new Error("Data ไม่ถูกต้อง");
+        }
+
+        total.innerText = `(${data.total || 0} คน)`;
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
         list.innerHTML = '';
 
-        data.patients.forEach(p => {
-          const card = document.createElement('div');
-          card.className = 'patient-card';
+        // ✅ ตรวจสอบว่า data.patients ไม่เป็น undefined
+        if (Array.isArray(data.patients)) {
+          data.patients.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'patient-card';
 
-          card.innerHTML = `
-            <div class="patient-field"><span class="label">VN</span><span class="value">${p.vn || '-'}</span></div>
-            <div class="patient-field"><span class="label">HN</span><span class="value">${p.hn || '-'}</span></div>
-            <div class="patient-field"><span class="label">อายุ</span><span class="value">${p.age || '-'}</span></div>
-            <div class="patient-field"><span class="label">เพศ</span><span class="value">${p.sex || '-'}</span></div>
-            <div class="patient-field"><span class="label">หมู่บ้าน</span><span class="value">${p.village || '-'}</span></div>
-            <div class="patient-field"><span class="label">ตำบล</span><span class="value">${p.district_name || '-'}</span></div>
-            <div class="patient-field"><span class="label">อำเภอ</span><span class="value">${p.amphur_name || '-'}</span></div>
-            <div class="patient-field"><span class="label">จังหวัด</span><span class="value">${p.changwat_name || '-'}</span></div>
-            <div class="patient-field"><span class="label">ICD10</span><span class="value">${p.diag_code || '-'}</span></div>
-            <div class="patient-field"><span class="label">ประเภทวินิจฉัย</span><span class="value">${p.diag_type || '-'}</span></div>
-            <div class="patient-field"><span class="label">แพทย์</span><span class="value">${p.doctor || '-'}</span></div>
-            <div class="patient-field"><span class="label">ประเภทการมา</span><span class="value">${p.visit_type || '-'}</span></div>
-            <div class="patient-field"><span class="label">แผนก</span><span class="value">${p.department || '-'}</span></div>
-            <div class="patient-field"><span class="label">สิทธิ์</span><span class="value">${p.pttype || '-'}</span></div>
-            <div class="patient-field"><span class="label">วันที่ตรวจ</span><span class="value">${p.vstdate || '-'}</span></div>
-            <div class="patient-field"><span class="label">เวลาตรวจ</span><span class="value">${p.vsttime ? p.vsttime.slice(0, 5) : '-'}</span></div>
-            <hr>
-          `;
-          list.appendChild(card);
-        });
+            card.innerHTML = `
+              <div class="patient-field"><span class="label">VN</span><span class="value">${p.vn || '-'}</span></div>
+              <div class="patient-field"><span class="label">HN</span><span class="value">${p.hn || '-'}</span></div>
+              <div class="patient-field"><span class="label">อายุ</span><span class="value">${p.age || '-'}</span></div>
+              <div class="patient-field"><span class="label">เพศ</span><span class="value">${p.sex || '-'}</span></div>
+              <div class="patient-field"><span class="label">ตำบล</span><span class="value">${p.district_name || '-'}</span></div>
+              <div class="patient-field"><span class="label">อำเภอ</span><span class="value">${p.amphur_name || '-'}</span></div>
+              <div class="patient-field"><span class="label">จังหวัด</span><span class="value">${p.changwat_name || '-'}</span></div>
+              <div class="patient-field"><span class="label">ICD10</span><span class="value">${p.diag_code || '-'}</span></div>
+              <div class="patient-field"><span class="label">ประเภทวินิจฉัย</span><span class="value">${p.diag_type || '-'}</span></div>
+              <div class="patient-field"><span class="label">แพทย์</span><span class="value">${p.doctor || '-'}</span></div>
+              <div class="patient-field"><span class="label">ประเภทการมา</span><span class="value">${p.visit_type || '-'}</span></div>
+              <div class="patient-field"><span class="label">แผนก</span><span class="value">${p.department || '-'}</span></div>
+              <div class="patient-field"><span class="label">สิทธิ์</span><span class="value">${p.pttype || '-'}</span></div>
+              <div class="patient-field"><span class="label">วันที่ตรวจ</span><span class="value">${p.vstdate || '-'}</span></div>
+              <div class="patient-field"><span class="label">เวลาตรวจ</span><span class="value">${p.vsttime ? p.vsttime.slice(0, 5) : '-'}</span></div>
+              <hr>
+            `;
+            list.appendChild(card);
+          });
+        } else {
+          list.innerHTML = `<div class="error">ไม่พบข้อมูลผู้ป่วย หรือข้อมูลไม่ถูกต้อง</div>`;
+        }
 
       } catch (err) {
         console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);
