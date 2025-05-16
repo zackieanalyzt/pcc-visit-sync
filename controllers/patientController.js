@@ -74,19 +74,15 @@ exports.syncPatients = async (req, res) => {
         kskdepartment.depcode IN ('108','109','110')
     `;
 
-    // ✅ เพิ่มเงื่อนไข WHERE เพิ่มเติมหากมี since_vstdate และ since_vsttime
+    // ✅ ปรับเงื่อนไข WHERE ให้ใช้ vstdate และ vsttime จาก MariaDB
     if (since_vstdate && since_vsttime) {
       sql += `
         AND (
           ovst.vstdate > '${since_vstdate}'
-          OR (
-            ovst.vstdate = '${since_vstdate}' 
-            AND ovst.vsttime > '${since_vsttime}'
-          )
+          OR (ovst.vstdate = '${since_vstdate}' AND ovst.vsttime > '${since_vsttime}')
         )
       `;
     } else {
-      // หากไม่มี since → ดึงแค่ข้อมูลวันนี้ (หรือตามช่วงที่ต้องการ)
       sql += " AND ovst.vstdate >= '2025-04-01'";
     }
 
@@ -99,7 +95,7 @@ exports.syncPatients = async (req, res) => {
       await patientModel.insertPatient(p);
     }
 
-    // ส่ง JSON response กลับไป frontend
+    // ✅ ส่ง JSON response กลับไป frontend
     res.json({
       message: "Sync เรียบร้อย",
       total: patients.length,
