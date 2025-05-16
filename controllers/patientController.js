@@ -59,7 +59,7 @@ exports.syncPatients = async (req, res) => {
       WHERE
         ovst.vstdate BETWEEN '2025-04-01' AND '2025-04-17'
         AND kskdepartment.depcode IN ('108','109','110')
-      ORDER BY ovst.vstdate DESC, ovst.vsttime DESC
+      ORDER BY ovst.vstdate ASC, ovst.vsttime ASC
     `;
 
     const patients = await mariadb.query(sql);
