@@ -82,11 +82,14 @@
         const totalElement = document.getElementById('total');
         const lastUpdated = document.getElementById('lastUpdated');
 
-        totalElement.innerText = `(${data.total} คน)`; // ✅ ใช้ total ใหม่
+        // 💡 นับจำนวน record หลัง group by
+        const groupedPatients = groupByVN(data.patients);
+        const total = groupedPatients.length;
+
+        totalElement.innerText = `(${total} คน)`; // ✅ ใช้ total ใหม่
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
-        if (Array.isArray(data.patients) && data.patients.length > 0) {
-          const groupedPatients = groupByVN(data.patients);
+        if (Array.isArray(groupedPatients) && groupedPatients.length > 0) {
           const table = createPatientTable(groupedPatients);
           list.innerHTML = '';
           list.appendChild(table);
@@ -174,8 +177,8 @@
           p.visit_type || '-',
           p.department || '-',
           p.pttype || '-',
-          p.vstdate || '-',
-          p.vsttime ? p.vsttime.slice(0, 5) : '-'
+          p.vstdate ? p.vstdate.slice(0, 10) : '-', // ✅ แสดงแค่ YYYY-MM-DD
+          p.vsttime ? p.vsttime.slice(0, 5) : '-' // เวลาเช่นเดิม
         ];
 
         cells.forEach(cellData => {
