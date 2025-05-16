@@ -1,5 +1,5 @@
 const mariadb = require('../config/mariadb');
-const patientModel = require('../models/patientModel');
+const patientModel = require('../models/PatientModel');
 
 exports.syncPatients = async (req, res) => {
   try {
