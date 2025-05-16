@@ -17,10 +17,7 @@ exports.insertPatient = async (patient) => {
       year_visit, month_visit, date_visit,
       visit_type, department, pttype, vstdate, vsttime
     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-    ON CONFLICT (vn) DO UPDATE SET
-      hn = EXCLUDED.hn,
-      diag_code = EXCLUDED.diag_code,
-      diag_type = EXCLUDED.diag_type
+    ON CONFLICT (vn) DO NOTHING
   `;
 
   const values = [
