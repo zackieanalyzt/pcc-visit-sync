@@ -56,21 +56,30 @@
   <div id="lastUpdated"></div>
 
   <script>
+    let lastVstDate = '';
+    let lastVstTime = '';
+
     async function fetchPatients() {
       try {
-        const res = await fetch('/api/patients/sync');
+        let url = '/api/patients/sync';
+
+        // 🚀 ส่งพารามิเตอร์ since กลับไป API
+        if (lastVstDate && lastVstTime) {
+          url += `?since_vstdate=${lastVstDate}&since_vsttime=${lastVstTime}`;
+        }
+
+        const res = await fetch(url);
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
 
-        // 💡 ตรวจสอบว่า response เป็น JSON จริง ๆ
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           throw new TypeError("Oops, we haven't got JSON!");
         }
 
-        const data = await res.json(); // ✅ ตอนนี้ปลอดภัยแล้ว
+        const data = await res.json();
 
         const list = document.getElementById('patient-list');
         const total = document.getElementById('total');
@@ -79,74 +88,82 @@
         total.innerText = `(${data.total} คน)`;
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
-        list.innerHTML = ''; // เคลียร์ข้อมูลเก่า
+        if (Array.isArray(data.patients) && data.patients.length > 0) {
+          // 💡 อัปเดต last record ล่าสุดเพื่อใช้ในรอบถัดไป
+          const lastRecord = data.patients[data.patients.length - 1];
+          lastVstDate = lastRecord.vstdate;
+          lastVstTime = lastRecord.vsttime;
 
-        if (Array.isArray(data.patients)) {
           // ✅ สร้างตาราง HTML
-          const table = document.createElement('table');
-          table.style.width = '100%';
-          table.style.borderCollapse = 'collapse';
-
-          // สร้าง header ของตาราง
-          const thead = document.createElement('thead');
-          const rowHeader = document.createElement('tr');
-          ['VN', 'HN', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'ประเภทวินิจฉัย', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
-            const th = document.createElement('th');
-            th.textContent = headerText;
-            rowHeader.appendChild(th);
-          });
-          thead.appendChild(rowHeader);
-          table.appendChild(thead);
-
-          // สร้าง body ของตาราง
-          const tbody = document.createElement('tbody');
-          data.patients.forEach(p => {
-            const row = document.createElement('tr');
-
-            // ใส่ข้อมูลแต่ละ field
-            [
-              p.vn || '-',
-              p.hn || '-',
-              p.age || '-',
-              p.sex || '-',
-              p.district_name || '-',
-              p.amphur_name || '-',
-              p.changwat_name || '-',
-              p.diag_code || '-',
-              p.diag_type || '-',
-              p.doctor || '-',
-              p.visit_type || '-',
-              p.department || '-',
-              p.pttype || '-',
-              p.vstdate || '-',
-              p.vsttime ? p.vsttime.slice(0, 5) : '-'
-            ].forEach(cellData => {
-              const cell = document.createElement('td');
-              cell.textContent = cellData;
-              row.appendChild(cell);
-            });
-
-            tbody.appendChild(row);
-          });
-          table.appendChild(tbody);
-
-          // ใส่ตารางลงใน DOM
+          const table = createPatientTable(data.patients);
+          list.innerHTML = ''; // clear เดิม
           list.appendChild(table);
         } else {
-          list.innerHTML = `<div class="error">ไม่พบข้อมูลผู้ป่วย หรือข้อมูลไม่ถูกต้อง</div>`;
+          list.innerHTML = `<div class="error">ไม่มีข้อมูลผู้ป่วยใหม่</div>`;
         }
 
       } catch (err) {
-        console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);
+        console.error("โหลดข้อมูลไม่ได้:", err);
         document.getElementById('patient-list').innerHTML = `<div class="error">ไม่สามารถโหลดข้อมูลได้<br>${err.message}</div>`;
       }
+    }
+
+    // 🧱 ฟังก์ชันสร้างตาราง
+    function createPatientTable(patients) {
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+
+      // หัวตาราง
+      const thead = document.createElement('thead');
+      const rowHeader = document.createElement('tr');
+      ['VN', 'HN', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'ประเภทวินิจฉัย', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        rowHeader.appendChild(th);
+      });
+      thead.appendChild(rowHeader);
+      table.appendChild(thead);
+
+      // ข้อมูลแต่ละแถว
+      const tbody = document.createElement('tbody');
+      patients.forEach(p => {
+        const row = document.createElement('tr');
+
+        [
+          p.vn || '-',
+          p.hn || '-',
+          p.age || '-',
+          p.sex || '-',
+          p.district_name || '-',
+          p.amphur_name || '-',
+          p.changwat_name || '-',
+          p.diag_code || '-',
+          p.diag_type || '-',
+          p.doctor || '-',
+          p.visit_type || '-',
+          p.department || '-',
+          p.pttype || '-',
+          p.vstdate || '-',
+          p.vsttime ? p.vsttime.slice(0, 5) : '-'
+        ].forEach(cellData => {
+          const cell = document.createElement('td');
+          cell.textContent = cellData;
+          row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      return table;
     }
 
     // 🔁 เรียก API เมื่อเริ่มต้น
     fetchPatients();
 
     // 🔄 อัปเดตทุก 10 นาที
-    setInterval(fetchPatients, 6000000); // 600000 ms = 10 นาที
+    setInterval(fetchPatients, 600000); // 600000 ms = 10 นาที
   </script>
 
 </body>
