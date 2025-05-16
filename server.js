@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 
 app.use('/api', patientRoutes);
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 3001; // เปลี่ยนจาก 3000 เป็น 3001
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`API กำลังทำงานที่ http://localhost:${PORT}`);
 });
