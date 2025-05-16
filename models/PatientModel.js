@@ -16,8 +16,7 @@ exports.insertPatient = async (patient) => {
       diag_code, diag_type, doctor,
       year_visit, month_visit, date_visit,
       visit_type, department, pttype, vstdate, vsttime
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-    ON CONFLICT (vn) DO NOTHING
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
   `;
 
   const values = [
@@ -28,5 +27,14 @@ exports.insertPatient = async (patient) => {
     visit_type, department, pttype, vstdate, vsttime
   ];
 
-  await query(text, values);
+  try {
+    await query(text, values);
+  } catch (err) {
+    if (err.code === '23505') {
+      // ถ้ามี duplicate key error (UNIQUE VIOLATION)
+      console.log(`[INFO] Record ซ้ำ: ${vn} - ข้ามการบันทึก`);
+    } else {
+      console.error(`Error inserting record ${vn}:`, err.message);
+    }
+  }
 };
