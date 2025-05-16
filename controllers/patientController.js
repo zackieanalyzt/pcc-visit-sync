@@ -16,8 +16,9 @@ function convertBigintToString(obj) {
 
 exports.syncPatients = async (req, res) => {
   try {
-    // 1. ดึงข้อมูลจาก MariaDB
-    const sql = `
+    const { since_vstdate, since_vsttime } = req.query;
+
+    let sql = `
       SELECT
         ovst.vn,
         patient.hn,
@@ -70,19 +71,35 @@ exports.syncPatients = async (req, res) => {
           AND chw.tmbpart = '00' 
           AND chw.codetype = '1'
       WHERE
-        ovst.vstdate BETWEEN '2025-04-01' AND '2025-04-17'
-        AND kskdepartment.depcode IN ('108','109','110')
-      ORDER BY ovst.vstdate ASC, ovst.vsttime ASC
+        kskdepartment.depcode IN ('108','109','110')
     `;
+
+    // ✅ เพิ่มเงื่อนไข WHERE เพิ่มเติมหากมี since_vstdate และ since_vsttime
+    if (since_vstdate && since_vsttime) {
+      sql += `
+        AND (
+          ovst.vstdate > '${since_vstdate}'
+          OR (
+            ovst.vstdate = '${since_vstdate}' 
+            AND ovst.vsttime > '${since_vsttime}'
+          )
+        )
+      `;
+    } else {
+      // หากไม่มี since → ดึงแค่ข้อมูลวันนี้ (หรือตามช่วงที่ต้องการ)
+      sql += " AND ovst.vstdate >= '2025-04-01'";
+    }
+
+    sql += " ORDER BY ovst.vstdate ASC, ovst.vsttime ASC";
 
     const patients = (await mariadb.query(sql)).map(p => convertBigintToString(p));
 
-    // 2. บันทึกลง PostgreSQL
+    // บันทึกลง PostgreSQL
     for (let p of patients) {
       await patientModel.insertPatient(p);
     }
 
-    // ✅ ส่งข้อมูลกลับเป็น JSON
+    // ส่ง JSON response กลับไป frontend
     res.json({
       message: "Sync เรียบร้อย",
       total: patients.length,
