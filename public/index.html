@@ -63,16 +63,13 @@
       try {
         let url = '/api/patients/sync';
 
-        // 🚀 ส่งพารามิเตอร์ since กลับไป API
         if (lastVstDate && lastVstTime) {
           url += `?since_vstdate=${lastVstDate}&since_vsttime=${lastVstTime}`;
         }
 
         const res = await fetch(url);
 
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
@@ -82,21 +79,16 @@
         const data = await res.json();
 
         const list = document.getElementById('patient-list');
-        const total = document.getElementById('total');
+        const totalElement = document.getElementById('total');
         const lastUpdated = document.getElementById('lastUpdated');
 
-        total.innerText = `(${data.total} คน)`;
+        totalElement.innerText = `(${data.total} คน)`;
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
         if (Array.isArray(data.patients) && data.patients.length > 0) {
-          // 💡 อัปเดต last record ล่าสุดเพื่อใช้ในรอบถัดไป
-          const lastRecord = data.patients[data.patients.length - 1];
-          lastVstDate = lastRecord.vstdate;
-          lastVstTime = lastRecord.vsttime;
-
-          // ✅ สร้างตาราง HTML
-          const table = createPatientTable(data.patients);
-          list.innerHTML = ''; // clear เดิม
+          const groupedPatients = groupByVN(data.patients);
+          const table = createPatientTable(groupedPatients);
+          list.innerHTML = '';
           list.appendChild(table);
         } else {
           list.innerHTML = `<div class="error">ไม่มีข้อมูลผู้ป่วยใหม่</div>`;
@@ -108,16 +100,53 @@
       }
     }
 
-    // 🧱 ฟังก์ชันสร้างตาราง
+    // 💡 ฟังก์ชันรวม record ตาม VN และรวม diag_code(diag_type)
+    function groupByVN(patients) {
+      const grouped = {};
+
+      patients.forEach(p => {
+        if (!grouped[p.vn]) {
+          grouped[p.vn] = {
+            vn: p.vn,
+            hn: p.hn,
+            age: p.age,
+            sex: p.sex,
+            village: p.village,
+            district_name: p.district_name,
+            amphur_name: p.amphur_name,
+            changwat_name: p.changwat_name,
+            diag_codes: [],
+            doctor: p.doctor,
+            visit_type: p.visit_type,
+            department: p.department,
+            pttype: p.pttype,
+            vstdate: p.vstdate,
+            vsttime: p.vsttime
+          };
+        }
+
+        grouped[p.vn].diag_codes.push(`${p.diag_code}(${p.diag_type})`);
+      });
+
+      // เรียงลำดับตามวันที่และเวลา
+      return Object.values(grouped).sort((a, b) => {
+        const timeA = new Date(`1970-01-01T${a.vsttime}`);
+        const timeB = new Date(`1970-01-01T${b.vsttime}`);
+        return timeA - timeB; // เรียงจากเก่าไปใหม่
+      });
+    }
+
+    // 🧱 สร้างตาราง + เพิ่มลำดับที่
     function createPatientTable(patients) {
       const table = document.createElement('table');
       table.style.width = '100%';
       table.style.borderCollapse = 'collapse';
 
-      // หัวตาราง
+      // 📌 หัวตาราง + เพิ่ม "ลำดับ"
       const thead = document.createElement('thead');
       const rowHeader = document.createElement('tr');
-      ['VN', 'HN', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'ประเภทวินิจฉัย', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
+      // ['ลำดับ', 'VN', 'HN', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
+      ['ลำดับ', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
         rowHeader.appendChild(th);
@@ -125,28 +154,30 @@
       thead.appendChild(rowHeader);
       table.appendChild(thead);
 
-      // ข้อมูลแต่ละแถว
+      // 📄 ข้อมูลแต่ละแถว
       const tbody = document.createElement('tbody');
-      patients.forEach(p => {
+      patients.forEach((p, index) => {
         const row = document.createElement('tr');
 
-        [
-          p.vn || '-',
-          p.hn || '-',
+        const cells = [
+          index + 1, // ✅ ลำดับที่ (เริ่มจาก 1)
+          // p.vn || '-',
+          // p.hn || '-',
           p.age || '-',
           p.sex || '-',
           p.district_name || '-',
           p.amphur_name || '-',
           p.changwat_name || '-',
-          p.diag_code || '-',
-          p.diag_type || '-',
+          p.diag_codes.join(', ') || '-', // รวม ICD10 + DiagType
           p.doctor || '-',
           p.visit_type || '-',
           p.department || '-',
           p.pttype || '-',
           p.vstdate || '-',
           p.vsttime ? p.vsttime.slice(0, 5) : '-'
-        ].forEach(cellData => {
+        ];
+
+        cells.forEach(cellData => {
           const cell = document.createElement('td');
           cell.textContent = cellData;
           row.appendChild(cell);
@@ -163,7 +194,7 @@
     fetchPatients();
 
     // 🔄 อัปเดตทุก 10 นาที
-    setInterval(fetchPatients, 600000); // 600000 ms = 10 นาที
+    setInterval(fetchPatients, 6000000); // 600000 ms = 10 นาที
   </script>
 
 </body>
