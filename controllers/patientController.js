@@ -1,6 +1,19 @@
 const mariadb = require('../config/mariadb');
 const patientModel = require('../models/PatientModel');
 
+// 💡 ฟังก์ชันแปลง BigInt → String
+function convertBigintToString(obj) {
+  const result = {};
+  for (let key in obj) {
+    if (typeof obj[key] === 'bigint') {
+      result[key] = obj[key].toString(); // แปลงเป็น string
+    } else {
+      result[key] = obj[key];
+    }
+  }
+  return result;
+}
+
 exports.syncPatients = async (req, res) => {
   try {
     // 1. ดึงข้อมูลจาก MariaDB
@@ -53,7 +66,7 @@ exports.syncPatients = async (req, res) => {
           AND amp.tmbpart = '00' 
           AND amp.codetype = '2'
         LEFT JOIN thaiaddress chw ON chw.chwpart = patient.chwpart 
-          AND amp.amppart = '00' 
+          AND chw.amppart = '00' 
           AND chw.tmbpart = '00' 
           AND chw.codetype = '1'
       WHERE
@@ -62,18 +75,18 @@ exports.syncPatients = async (req, res) => {
       ORDER BY ovst.vstdate ASC, ovst.vsttime ASC
     `;
 
-    const patients = await mariadb.query(sql);
+    const patients = (await mariadb.query(sql)).map(p => convertBigintToString(p));
 
     // 2. บันทึกลง PostgreSQL
     for (let p of patients) {
       await patientModel.insertPatient(p);
     }
 
-    // ✅ แก้ไขตรงนี้เพื่อส่งข้อมูลผู้ป่วยกลับไปด้วย
+    // ✅ ส่งข้อมูลกลับเป็น JSON
     res.json({
       message: "Sync เรียบร้อย",
       total: patients.length,
-      patients: patients // 💡 ส่งข้อมูลผู้ป่วยกลับไปด้วย
+      patients: patients
     });
 
   } catch (err) {
