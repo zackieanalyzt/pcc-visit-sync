@@ -82,7 +82,7 @@
         const totalElement = document.getElementById('total');
         const lastUpdated = document.getElementById('lastUpdated');
 
-        totalElement.innerText = `(${data.total} คน)`;
+        totalElement.innerText = `(${data.total} คน)`; // ✅ ใช้ total ใหม่
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
         if (Array.isArray(data.patients) && data.patients.length > 0) {
@@ -128,11 +128,15 @@
         grouped[p.vn].diag_codes.push(`${p.diag_code}(${p.diag_type})`);
       });
 
-      // เรียงลำดับตามวันที่และเวลา
+      // 💡 เรียงลำดับตามวันที่และเวลา
       return Object.values(grouped).sort((a, b) => {
-        const timeA = new Date(`1970-01-01T${a.vsttime}`);
-        const timeB = new Date(`1970-01-01T${b.vsttime}`);
-        return timeA - timeB; // เรียงจากเก่าไปใหม่
+        // เปรียบเทียบวันที่ก่อน
+        if (a.vstdate !== b.vstdate) {
+          return a.vstdate.localeCompare(b.vstdate);
+        }
+
+        // หากวันเดียวกัน → เปรียบเทียบเวลา
+        return a.vsttime.localeCompare(b.vsttime);
       });
     }
 
@@ -145,7 +149,6 @@
       // 📌 หัวตาราง + เพิ่ม "ลำดับ"
       const thead = document.createElement('thead');
       const rowHeader = document.createElement('tr');
-      // ['ลำดับ', 'VN', 'HN', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
       ['ลำดับ', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
@@ -161,8 +164,6 @@
 
         const cells = [
           index + 1, // ✅ ลำดับที่ (เริ่มจาก 1)
-          // p.vn || '-',
-          // p.hn || '-',
           p.age || '-',
           p.sex || '-',
           p.district_name || '-',
@@ -194,7 +195,7 @@
     fetchPatients();
 
     // 🔄 อัปเดตทุก 10 นาที
-    setInterval(fetchPatients, 6000000); // 600000 ms = 10 นาที
+    setInterval(fetchPatients, 600000); // 600000 ms = 10 นาที
   </script>
 
 </body>
