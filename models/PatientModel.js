@@ -16,7 +16,7 @@ exports.insertPatient = async (patient) => {
       diag_code, diag_type, doctor,
       year_visit, month_visit, date_visit,
       visit_type, department, pttype, vstdate, vsttime
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
   `;
 
   const values = [
