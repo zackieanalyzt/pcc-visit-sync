@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>แผนกตา - รายงานผู้ป่วย</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      color: #2c3e50;
+    }
+
+    .patient-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .patient-card strong {
+      color: #2c3e50;
+    }
+
+    .patient-field {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+    }
+
+    .label {
+      font-weight: bold;
+      width: 150px;
+      color: #34495e;
+    }
+
+    .value {
+      color: #2d3436;
+    }
+
+    #total {
+      font-size: 1.1em;
+      color: #7f8c8d;
+    }
+
+    #lastUpdated {
+      font-size: 0.9em;
+      color: #bdc3c7;
+      margin-top: 10px;
+    }
+
+    hr {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>แผนกตา - รายงานผู้ป่วย <span id="total">(กำลังโหลด...)</span></h1>
+  <div id="patient-list"></div>
+  <div id="lastUpdated"></div>
+
+  <script>
+    async function fetchPatients() {
+      try {
+        const res = await fetch('/api/patients/sync');
+        const data = await res.json();
+
+        const list = document.getElementById('patient-list');
+        const total = document.getElementById('total');
+        const lastUpdated = document.getElementById('lastUpdated');
+
+        total.innerText = `(${data.total} คน)`;
+
+        // อัปเดตเวลาที่โหลดล่าสุด
+        lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
+
+        list.innerHTML = '';
+
+        data.patients.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'patient-card';
+
+          card.innerHTML = `
+            <div class="patient-field"><span class="label">VN</span><span class="value">${p.vn || '-'}</span></div>
+            <div class="patient-field"><span class="label">HN</span><span class="value">${p.hn || '-'}</span></div>
+            <div class="patient-field"><span class="label">อายุ</span><span class="value">${p.age || '-'}</span></div>
+            <div class="patient-field"><span class="label">เพศ</span><span class="value">${p.sex || '-'}</span></div>
+            <div class="patient-field"><span class="label">หมู่บ้าน</span><span class="value">${p.village || '-'}</span></div>
+            <div class="patient-field"><span class="label">ตำบล</span><span class="value">${p.district_name || '-'}</span></div>
+            <div class="patient-field"><span class="label">อำเภอ</span><span class="value">${p.amphur_name || '-'}</span></div>
+            <div class="patient-field"><span class="label">จังหวัด</span><span class="value">${p.changwat_name || '-'}</span></div>
+            <div class="patient-field"><span class="label">ICD10</span><span class="value">${p.diag_code || '-'}</span></div>
+            <div class="patient-field"><span class="label">ประเภทวินิจฉัย</span><span class="value">${p.diag_type || '-'}</span></div>
+            <div class="patient-field"><span class="label">แพทย์</span><span class="value">${p.doctor || '-'}</span></div>
+            <div class="patient-field"><span class="label">ปี/เดือน/วัน</span><span class="value">${p.year_visit || '-'} / ${p.month_visit || '-'} / ${p.date_visit || '-'}</span></div>
+            <div class="patient-field"><span class="label">ประเภทการมา</span><span class="value">${p.visit_type || '-'}</span></div>
+            <div class="patient-field"><span class="label">แผนก</span><span class="value">${p.department || '-'}</span></div>
+            <div class="patient-field"><span class="label">สิทธิ์</span><span class="value">${p.pttype || '-'}</span></div>
+            <div class="patient-field"><span class="label">วันที่ตรวจ</span><span class="value">${p.vstdate || '-'}</span></div>
+            <div class="patient-field"><span class="label">เวลาตรวจ</span><span class="value">${p.vsttime ? p.vsttime.slice(0, 5) : '-'}</span></div>
+            <hr>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        console.error("เกิดข้อผิดพลาดในการโหลดข้อมูล:", err);
+        document.getElementById('patient-list').innerText = "ไม่สามารถโหลดข้อมูลได้";
+      }
+    }
+
+    // โหลดข้อมูลครั้งแรก
+    fetchPatients();
+
+    // อัปเดตทุก 10 นาที
+    setInterval(fetchPatients, 600000); // 600000 ms = 10 นาที
+  </script>
+
+</body>
+</html>
