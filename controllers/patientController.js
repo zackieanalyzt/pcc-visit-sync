@@ -53,7 +53,7 @@ exports.syncPatients = async (req, res) => {
           AND amp.tmbpart = '00' 
           AND amp.codetype = '2'
         LEFT JOIN thaiaddress chw ON chw.chwpart = patient.chwpart 
-          AND chw.amppart = '00' 
+          AND amp.amppart = '00' 
           AND chw.tmbpart = '00' 
           AND chw.codetype = '1'
       WHERE
@@ -69,9 +69,15 @@ exports.syncPatients = async (req, res) => {
       await patientModel.insertPatient(p);
     }
 
-    res.json({ message: "Sync เรียบร้อย", total: patients.length });
+    // ✅ แก้ไขตรงนี้เพื่อส่งข้อมูลผู้ป่วยกลับไปด้วย
+    res.json({
+      message: "Sync เรียบร้อย",
+      total: patients.length,
+      patients: patients // 💡 ส่งข้อมูลผู้ป่วยกลับไปด้วย
+    });
+
   } catch (err) {
-    console.error(err);
+    console.error("เกิดข้อผิดพลาดในการ sync:", err.message);
     res.status(500).json({ error: "เกิดข้อผิดพลาดในการ sync" });
   }
 };
