@@ -82,11 +82,11 @@
         const totalElement = document.getElementById('total');
         const lastUpdated = document.getElementById('lastUpdated');
 
-        // 💡 นับจำนวน record หลัง group by
+        // 💡 นับ record หลัง group by
         const groupedPatients = groupByVN(data.patients);
         const total = groupedPatients.length;
 
-        totalElement.innerText = `(${total} คน)`; // ✅ ใช้ total ใหม่
+        totalElement.innerText = `(${total} คน)`;
         lastUpdated.innerText = `อัปเดตล่าสุดเมื่อ ${new Date().toLocaleString()}`;
 
         if (Array.isArray(groupedPatients) && groupedPatients.length > 0) {
@@ -149,7 +149,7 @@
       table.style.width = '100%';
       table.style.borderCollapse = 'collapse';
 
-      // 📌 หัวตาราง + เพิ่ม "ลำดับ"
+      // 📌 หัวตาราง
       const thead = document.createElement('thead');
       const rowHeader = document.createElement('tr');
       ['ลำดับ', 'อายุ', 'เพศ', 'ตำบล', 'อำเภอ', 'จังหวัด', 'ICD10', 'แพทย์', 'ประเภทการมา', 'แผนก', 'สิทธิ์', 'วันที่ตรวจ', 'เวลาตรวจ'].forEach(headerText => {
@@ -165,20 +165,23 @@
       patients.forEach((p, index) => {
         const row = document.createElement('tr');
 
+        // ✅ แปลงวันที่ให้ถูกต้องแม้เจอ timezone หรือ date string แปลก ๆ
+        const formattedDate = formatLocalDate(p.vstdate); // ใช้ฟังก์ชันแปลงวันที่
+
         const cells = [
-          index + 1, // ✅ ลำดับที่ (เริ่มจาก 1)
+          index + 1,
           p.age || '-',
           p.sex || '-',
           p.district_name || '-',
           p.amphur_name || '-',
           p.changwat_name || '-',
-          p.diag_codes.join(', ') || '-', // รวม ICD10 + DiagType
+          p.diag_codes.join(', ') || '-',
           p.doctor || '-',
           p.visit_type || '-',
           p.department || '-',
           p.pttype || '-',
-          p.vstdate ? p.vstdate.slice(0, 10) : '-', // ✅ แสดงแค่ YYYY-MM-DD
-          p.vsttime ? p.vsttime.slice(0, 5) : '-' // เวลาเช่นเดิม
+          formattedDate,
+          p.vsttime ? p.vsttime.slice(0, 5) : '-'
         ];
 
         cells.forEach(cellData => {
@@ -192,6 +195,15 @@
 
       table.appendChild(tbody);
       return table;
+    }
+
+    // 📅 ฟังก์ชันแปลงวันที่ให้ถูกต้อง
+    function formatLocalDate(dateStr) {
+      // สร้าง Date object จากวันที่ (สมมติว่าเป็น YYYY-MM-DD)
+      const date = new Date(dateStr);
+
+      // ✅ แก้ปัญหาวันที่ผิดด้วย toISOString
+      return date.toISOString().slice(0, 10); // YYYY-MM-DD
     }
 
     // 🔁 เรียก API เมื่อเริ่มต้น
