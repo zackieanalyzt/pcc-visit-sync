@@ -166,7 +166,8 @@
         const row = document.createElement('tr');
 
         // ✅ แปลงวันที่ให้ถูกต้องแม้เจอ timezone หรือ date string แปลก ๆ
-        const formattedDate = formatLocalDate(p.vstdate); // ใช้ฟังก์ชันแปลงวันที่
+        // const formattedDate = formatLocalDate(p.vstdate); // ใช้ฟังก์ชันแปลงวันที่
+        
 
         const cells = [
           index + 1,
@@ -180,7 +181,8 @@
           p.visit_type || '-',
           p.department || '-',
           p.pttype || '-',
-          formattedDate,
+          // formattedDate,
+          p.vstdate,
           p.vsttime ? p.vsttime.slice(0, 5) : '-'
         ];
 
