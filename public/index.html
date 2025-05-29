@@ -200,13 +200,21 @@
     }
 
     // 📅 ฟังก์ชันแปลงวันที่ให้ถูกต้อง
-    function formatLocalDate(dateStr) {
+    //function formatLocalDate(dateStr) {
       // สร้าง Date object จากวันที่ (สมมติว่าเป็น YYYY-MM-DD)
-      const date = new Date(dateStr);
+      //const date = new Date(dateStr);
 
       // ✅ แก้ปัญหาวันที่ผิดด้วย toISOString
-      return date.toISOString().slice(0, 10); // YYYY-MM-DD
-    }
+      //return date.toISOString().slice(0, 10); // YYYY-MM-DD
+    //}
+
+    function formatLocalDate(dateStr) {
+  // ตรวจสอบว่า dateStr อยู่ในรูปแบบ YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr; // ใช้สตริงวันที่โดยตรง
+  }
+  return 'Invalid Date';
+}
 
     // 🔁 เรียก API เมื่อเริ่มต้น
     fetchPatients();
