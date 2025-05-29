@@ -86,7 +86,7 @@ exports.syncPatients = async (req, res) => {
       sql += " AND ovst.vstdate >= '2025-04-01'";
     }
 
-    sql += " ORDER BY ovst.vstdate ASC, ovst.vsttime ASC";
+    sql += " ORDER BY ovst.vstdate DESC, ovst.vsttime ASC";
 
     const patients = (await mariadb.query(sql)).map(p => convertBigintToString(p));
 
