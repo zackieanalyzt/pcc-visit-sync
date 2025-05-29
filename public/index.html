@@ -182,7 +182,7 @@
           p.department || '-',
           p.pttype || '-',
           // formattedDate,
-          p.vstdate,
+          p.vstdate || '-',
           p.vsttime ? p.vsttime.slice(0, 5) : '-'
         ];
 
