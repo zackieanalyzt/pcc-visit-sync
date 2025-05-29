@@ -181,8 +181,8 @@
           p.visit_type || '-',
           p.department || '-',
           p.pttype || '-',
-          formattedDate,
-          // p.vstdate || '-',
+          // formattedDate,
+          p.vstdate || '-',
           p.vsttime ? p.vsttime.slice(0, 5) : '-'
         ];
 
@@ -208,22 +208,35 @@
       //return date.toISOString().slice(0, 10); // YYYY-MM-DD
     //}
 
-function formatLocalDate(dateStr) {
-  // แยกวันที่จากสตริง YYYY-MM-DD
-  const [year, month, day] = dateStr.split('-').map(Number);
-  
-  // สร้าง Date object โดยระบุว่าเป็นวันที่ท้องถิ่น (ไม่แปลงเป็น UTC)
-  const date = new Date(year, month - 1, day); // month ใน JavaScript เริ่มจาก 0
-  
-  // สร้างสตริงวันที่ในรูปแบบ YYYY-MM-DD
-  const formattedDate = [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'), // เพิ่ม 0 นำหน้า
-    String(date.getDate()).padStart(2, '0')
-  ].join('-');
-  
-  return formattedDate;
-}
+// ฟังก์ชันแปลงวันที่ให้ถูกต้องในเขตเวลาไทย
+    function formatLocalDate(dateStr) {
+      console.log('Input dateStr:', dateStr, typeof dateStr); // Log เพื่อ debug
+      
+      // ตรวจสอบว่า dateStr เป็นสตริงและไม่ว่าง
+      if (!dateStr || typeof dateStr !== 'string' || dateStr.trim() === '') {
+        return 'Invalid Date';
+      }
+      
+      // สร้าง Date object จากสตริง ISO 8601 หรือรูปแบบอื่น
+      const date = new Date(dateStr);
+      
+      // ตรวจสอบว่า Date object ถูกต้อง
+      if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      
+      // แปลงเป็นวันที่ในเขตเวลาไทย (UTC+7)
+      const options = {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      };
+      const formattedDate = date.toLocaleDateString('en-CA', options); // ได้ YYYY-MM-DD
+      
+      return formattedDate;
+    }
+
 
     // 🔁 เรียก API เมื่อเริ่มต้น
     fetchPatients();
