@@ -208,12 +208,21 @@
       //return date.toISOString().slice(0, 10); // YYYY-MM-DD
     //}
 
-    function formatLocalDate(dateStr) {
-  // ตรวจสอบว่า dateStr อยู่ในรูปแบบ YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    return dateStr; // ใช้สตริงวันที่โดยตรง
-  }
-  return 'Invalid Date';
+function formatLocalDate(dateStr) {
+  // แยกวันที่จากสตริง YYYY-MM-DD
+  const [year, month, day] = dateStr.split('-').map(Number);
+  
+  // สร้าง Date object โดยระบุว่าเป็นวันที่ท้องถิ่น (ไม่แปลงเป็น UTC)
+  const date = new Date(year, month - 1, day); // month ใน JavaScript เริ่มจาก 0
+  
+  // สร้างสตริงวันที่ในรูปแบบ YYYY-MM-DD
+  const formattedDate = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'), // เพิ่ม 0 นำหน้า
+    String(date.getDate()).padStart(2, '0')
+  ].join('-');
+  
+  return formattedDate;
 }
 
     // 🔁 เรียก API เมื่อเริ่มต้น
