@@ -71,7 +71,7 @@ exports.syncPatients = async (req, res) => {
           AND chw.tmbpart = '00' 
           AND chw.codetype = '1'
       WHERE
-        kskdepartment.depcode IN ('108','109','110')
+        kskdepartment.depcode IN ('085','108','109','110')
     `;
 
     // ✅ ปรับเงื่อนไข WHERE ให้ใช้ vstdate และ vsttime จาก MariaDB
